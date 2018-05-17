@@ -24,12 +24,29 @@ var color = d3.scaleQuantize()
     .range(d3.schemeGreens[9].slice(1,7));
 
 var x = d3.scaleLinear()
-    .rangeRound([640,800]);
+    .rangeRound([600,800]);
+
+var y = d3.scaleLinear()
+    .rangeRound([600,800]);
 
 var squash = function(x) {
     var value = Math.floor((""+x).length/3); 
     return value;
 };
+
+var sort_asc = function(x) {
+    return x.sort(function (x, y) {
+        return d3.ascending(+x.residents, +y.residents);
+    })
+};
+
+var construct_value_array = function() {
+    var value_array = [];
+    for (var i = 0; i < 5; i++) {
+        value_array.push(x.invert(640 + 40*i));
+    }
+    return value_array;
+}
 
 //Create SVG element
 var svg = d3.select("body")
@@ -39,15 +56,20 @@ var svg = d3.select("body")
 
 //Load in agriculture data
 d3.csv("Auslander_PermResidents.csv", function(data) {
+    sortedAscending = sort_asc(data);
 
     //Set input domain for color scale
-    color.domain(
-        d3.extent(data, function(d) { return d.residents; })    
-    );
+    //Used third quartile instead of max to make visualization more informative (a few districts had very high data points)
+    color.domain([
+        d3.min(data, function(d) { return +d.residents; }),
+        d3.quantile(sortedAscending, 0.9, function(d) { return +d.residents;})
+    ]);
     
-    x.domain(
-        d3.extent(data, function(d) { return d.residents; })
-    );
+    x.domain([
+        d3.min(data, function(d) { return +d.residents; }),
+        d3.quantile(sortedAscending, 0.9, function(d) { return +d.residents;})
+    ]);
+    
     
     //Load in GeoJSON data
     d3.json("Switzerland.json", function(json) {
@@ -127,8 +149,7 @@ d3.csv("Auslander_PermResidents.csv", function(data) {
             .tickFormat(function(x) {
                 return ">" + d3.format(".2s")(x);
             })
-            //.tickValues([1001, 3233, 5464, 7696, 9927]))
-            .tickValues([1001, 3233, 5464, 7696, 9927]))
+            .tickValues(construct_value_array()))
           .select(".domain")
             .remove();
     });
