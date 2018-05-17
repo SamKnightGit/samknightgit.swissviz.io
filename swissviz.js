@@ -74,8 +74,8 @@ d3.csv("Auslander_PermResidents.csv", function(data) {
     //Load in GeoJSON data
     d3.json("Switzerland.json", function(json) {
 
-        //Merge the ag. data and GeoJSON
-        //Loop through once for each ag. data value
+        //Merge the population data and GeoJSON
+        //Loop through once for each population data value
         for (var i = 0; i < data.length; i++) {
 
             //Grab state name
@@ -107,6 +107,7 @@ d3.csv("Auslander_PermResidents.csv", function(data) {
            .enter()
            .append("path")
            .attr("d", path)
+           .style("stroke", 'grey')
            .style("fill", function(d) {
                 //Get data value
                 var value = d.properties.value;
