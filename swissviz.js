@@ -16,23 +16,11 @@ var path = d3.geoPath()
     .projection(projection);
 
 //Define quantize scale to sort data values into buckets of color
-//var color = d3.scaleQuantize()
-                    //.range(["rgb(237,248,233)","rgb(186,228,179)","rgb(116,196,118)","rgb(49,163,84)","rgb(0,109,44)"]);
-                    //Colors derived from ColorBrewer, by Cynthia Brewer, and included in
-                    //https://github.com/d3/d3-scale-chromatic
 var color = d3.scaleQuantize()
     .range(d3.schemeGreens[9].slice(1,7));
 
 var x = d3.scaleLinear()
     .rangeRound([600,800]);
-
-var y = d3.scaleLinear()
-    .rangeRound([600,800]);
-
-var squash = function(x) {
-    var value = Math.floor((""+x).length/3); 
-    return value;
-};
 
 var sort_asc = function(x) {
     return x.sort(function (x, y) {
@@ -48,6 +36,11 @@ var construct_value_array = function() {
     return value_array;
 }
 
+var tooltip = d3.select("#tooltip");
+tooltip
+    .style("left", "950px")
+    .style("top", "300px");
+
 //Create SVG element
 var svg = d3.select("body")
             .append("svg")
@@ -56,7 +49,7 @@ var svg = d3.select("body")
 
 //Load in agriculture data
 d3.csv("Auslander_PermResidents.csv", function(data) {
-    sortedAscending = sort_asc(data);
+    var sortedAscending = sort_asc(data);
 
     //Set input domain for color scale
     //Used third quartile instead of max to make visualization more informative (a few districts had very high data points)
@@ -106,6 +99,7 @@ d3.csv("Auslander_PermResidents.csv", function(data) {
            .data(json.features)
            .enter()
            .append("path")
+           .attr("class", "districts")
            .attr("d", path)
            .style("fill", function(d) {
                 //Get data value
@@ -118,6 +112,26 @@ d3.csv("Auslander_PermResidents.csv", function(data) {
                     //If value is undefined…
                     return "#ccc";
                 }
+           })
+           .on("mouseover", function(d) {
+                tooltip
+                    .select("#district")
+                    .text(d.properties.NAME_2);
+                if(d.properties.value) {
+                    tooltip 
+                        .select("#population")
+                        .text(d.properties.value);   
+                }
+                else {
+                    tooltip 
+                        .select("#population")
+                        .text("No Data");
+                }
+                
+                tooltip.transition().style("opacity", 1);
+           })
+           .on("mouseout", function() {
+                tooltip.transition().style("opacity", 0);
            });
 
         var g = svg.append("g")
